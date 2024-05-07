@@ -4,65 +4,79 @@
 //
 //  Created by Dave Coleman on 24/3/2024.
 //
-//
-//  PopupMessageView.swift
-//  Eucalypt
-//
-//  Created by Dave Coleman on 5/2/2024.
-//
 
+import Foundation
 import SwiftUI
-import Styles
 
-struct PopupMessageView: View {
+@MainActor
+public struct PopupMessage {
+    public var isLoading: Bool = false
+    public var title: String
+    public var message: String?
     
-    var body: some View {
-        
-        if let popup = PopupHandler.shared.message {
-            
-            VStack(spacing: 6) {
-                if popup.isLoading {
-                    LoadingIndicatorView()
-                } else {
-                    Group {
-                        
-                        Text(popup.title)
-                                .foregroundStyle(.primary)
-                                .fontWeight(.medium)
-                        
-                        if let message = popup.message {
-                            Text(message)
-                                .foregroundStyle(.secondary)
-                                .font(.caption)
-                        } // END popup showing check
-                    } // END group
-                    .frame(maxWidth: 160)
-                } // END loading check
-            } // END vstack
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 20)
-            .padding(.top, 13)
-            .padding(.bottom, 14)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: Rounding.large.value)
-                        .fill(.ultraThinMaterial)
-                }
-            )
-            .padding(.top)
-            .transition(.opacity)
-        } // END popup showing check
+    public init(isLoading: Bool = false, title: String, message: String? = nil) {
+        self.isLoading = isLoading
+        self.title = title
+        self.message = message
     }
 }
 
-#Preview("Popup message") {
+@MainActor
+public class PopupHandler: ObservableObject {
     
-    PopupMessageView()
+    @Published var message: PopupMessage? = nil
+    
+    public init(
+        message: PopupMessage? = nil,
+        popupTask: Task<Void, Never>? = nil
+    ) {
+        self.message = message
+        self.popupTask = popupTask
+    }
+    
+    private var popupTask: Task<Void, Never>? = nil
+    
+    public func showPopup(title: String, message: String? = nil) {
+        let popupMessage = PopupMessage(isLoading: false, title: title, message: message)
+        Task {
+            await showAndHidePopup(popupMessage: popupMessage)
+        }
+    }
+    
+    private func showAndHidePopup(popupMessage: PopupMessage) async {
+        popupTask?.cancel()
+        print("Popup triggered: \(popupMessage.title)")
         
-        .environment(ImportHandler())
-#if os(macOS)
-        .frame(width: 500, height: 400)
-        .background(.contentBackground)
-#endif
-
+        popupTask = Task { [weak self] in
+            await self?.displayPopup(popupMessage: popupMessage)
+            
+            do {
+                if #available(iOS 16.0, *) {
+                    try await Task.sleep(for: .seconds(2.5))
+                } else {
+                    // Fallback on earlier versions
+                }
+            } catch {
+                return
+            }
+            
+            await self?.hidePopup()
+        }
+    } // END show hide popup
+    
+    private func displayPopup(popupMessage: PopupMessage) async {
+        await MainActor.run {
+            withAnimation(.easeOut(duration: 0.1)) {
+                self.message = popupMessage
+            }
+        }
+    }
+    
+    private func hidePopup() async {
+        await MainActor.run {
+            withAnimation(.easeInOut(duration: 0.6)) {
+                self.message = nil
+            }
+        }
+    }
 }

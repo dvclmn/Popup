@@ -4,64 +4,77 @@
 //
 //  Created by Dave Coleman on 24/3/2024.
 //
+//
+//  PopupMessageView.swift
+//  Eucalypt
+//
+//  Created by Dave Coleman on 5/2/2024.
+//
 
-import Foundation
 import SwiftUI
 
-struct PopupMessage {
-    var isLoading: Bool = false
-    var title: String
-    var message: String?
+public struct PopupView<Content>: View where Content: View {
+    
+    @ObservedObject var popup: PopupHandler
+    
+    var rounding: Double
+    var loadingView: () -> Content
+    
+    public init(
+        rounding: Double,
+        popup: PopupHandler,
+        @ViewBuilder loadingView: @escaping () -> Content
+    ) {
+        self.rounding = rounding
+        self.popup = popup
+        self.loadingView = loadingView
+    }
+    
+    public var body: some View {
+        
+        if let popup = popup.message {
+            
+            VStack(spacing: 6) {
+                if popup.isLoading {
+                    loadingView()
+                } else {
+                    Group {
+                        
+                        Text(popup.title)
+                            .foregroundStyle(.primary)
+                            .fontWeight(.medium)
+                        
+                        if let message = popup.message {
+                            Text(message)
+                                .foregroundStyle(.secondary)
+                                .font(.caption)
+                        } // END popup showing check
+                    } // END group
+                    .frame(maxWidth: 160)
+                } // END loading check
+            } // END vstack
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 20)
+            .padding(.top, 13)
+            .padding(.bottom, 14)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: rounding)
+                        .fill(.ultraThinMaterial)
+                }
+            )
+            .padding(.top)
+            .transition(.opacity)
+        } // END popup showing check
+    }
 }
 
-@Observable
-public class PopupHandler {
-    
-    public static let shared = PopupHandler()
-    
-    public init() {} // Private initializer to prevent external instantiation
-    
-    var message: PopupMessage? = nil
-    
-    private var popupTask: Task<Void, Never>? = nil
-    
-    func showPopup(title: String, message: String? = nil) {
-        let popupMessage = PopupMessage(isLoading: false, title: title, message: message)
-        Task {
-            await showAndHidePopup(popupMessage: popupMessage)
-        }
-    }
-    
-    private func showAndHidePopup(popupMessage: PopupMessage) async {
-        popupTask?.cancel()
-        print("Popup triggered: \(popupMessage.title)")
-        
-        popupTask = Task { [weak self] in
-            await self?.displayPopup(popupMessage: popupMessage)
-            
-            do {
-                try await Task.sleep(for: .seconds(2.5))
-            } catch {
-                return
-            }
-            
-            await self?.hidePopup()
-        }
-    } // END show hide popup
-    
-    private func displayPopup(popupMessage: PopupMessage) async {
-        await MainActor.run {
-            withAnimation(.easeOut(duration: 0.1)) {
-                self.message = popupMessage
-            }
-        }
-    }
-    
-    private func hidePopup() async {
-        await MainActor.run {
-            withAnimation(.easeInOut(duration: 0.6)) {
-                self.message = nil
-            }
-        }
-    }
-}
+//#Preview("Popup message") {
+//
+//    PopupMessageView(rounding: 10, loadingView: )
+//#if os(macOS)
+//        .frame(width: 500, height: 400)
+//        .background(Swatch.darkGrey.colour)
+//#endif
+//
+//}
