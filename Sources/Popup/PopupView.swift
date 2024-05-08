@@ -18,16 +18,13 @@ public struct PopupView<Content>: View where Content: View {
     @ObservedObject var popup: PopupHandler
     
     var rounding: Double
-    var loadingView: () -> Content
     
     public init(
         rounding: Double,
-        popup: PopupHandler,
-        @ViewBuilder loadingView: @escaping () -> Content
+        popup: PopupHandler
     ) {
         self.rounding = rounding
         self.popup = popup
-        self.loadingView = loadingView
     }
     
     public var body: some View {
@@ -36,7 +33,7 @@ public struct PopupView<Content>: View where Content: View {
             
             VStack(spacing: 6) {
                 if popup.isLoading {
-                    loadingView()
+                    PopupLoadingIndicatorView()
                 } else {
                     Group {
                         
