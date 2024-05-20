@@ -12,15 +12,16 @@
 //
 
 import SwiftUI
+import Styles
 
-public struct PopupView<Content>: View where Content: View {
+public struct PopupView: View {
     
     @ObservedObject var popup: PopupHandler
     
     var rounding: Double
     
     public init(
-        rounding: Double,
+        rounding: Double = Styles.roundingMedium,
         popup: PopupHandler
     ) {
         self.rounding = rounding
@@ -47,7 +48,7 @@ public struct PopupView<Content>: View where Content: View {
                                 .font(.caption)
                         } // END popup showing check
                     } // END group
-                    .frame(maxWidth: 160)
+                    .frame(maxWidth: 180)
                 } // END loading check
             } // END vstack
             .multilineTextAlignment(.center)
@@ -60,7 +61,7 @@ public struct PopupView<Content>: View where Content: View {
                         .fill(.ultraThinMaterial)
                 }
             )
-            .padding(.top)
+            .padding(.top, 22)
             .transition(.opacity)
         } // END popup showing check
     }

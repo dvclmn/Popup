@@ -14,9 +14,13 @@ let package = Package(
             name: "Popup",
             targets: ["Popup"]),
     ],
+    dependencies: [
+        .package(name: "StyleLibrary", path: "../StyleLibrary")
+    ],
     targets: [
         .target(
-            name: "Popup"
+            name: "Popup",
+            dependencies: ["StyleLibrary"]
         ),
         .testTarget(
             name: "PopupTests",
