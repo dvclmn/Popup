@@ -15,17 +15,13 @@ let package = Package(
             targets: ["Popup"]),
     ],
     dependencies: [
-        .package(name: "StyleLibrary", path: "../StyleLibrary")
+        .package(name: "Styles", path: "../Styles")
     ],
     targets: [
         .target(
             name: "Popup",
-            dependencies: ["StyleLibrary"]
-        ),
-        .testTarget(
-            name: "PopupTests",
-            dependencies: ["Popup"]
-        ),
+            dependencies: ["Styles"]
+        )
     ]
 )
 

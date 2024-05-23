@@ -18,51 +18,63 @@ public struct PopupView: View {
     
     @ObservedObject var popup: PopupHandler
     
-    var rounding: Double
+    let rounding: Double
+    let topOffset: Double
+    
+    let maxWidth: Double = 240
+    let minWidth: Double = 180
+    
     
     public init(
         rounding: Double = Styles.roundingMedium,
+        topOffset: Double = 22,
         popup: PopupHandler
     ) {
         self.rounding = rounding
+        self.topOffset = topOffset
         self.popup = popup
     }
     
     public var body: some View {
         
-        if let popup = popup.message {
+        if let popup = popup.popupMessage {
             
             VStack(spacing: 6) {
                 if popup.isLoading {
                     PopupLoadingIndicatorView()
                 } else {
-                    Group {
+                    let markdownTitle = try! AttributedString(markdown: popup.title)
+                    
+                    Text(markdownTitle)
+                        .foregroundStyle(.primary)
+                        .fontWeight(.medium)
+                    
+                    if let message = popup.message {
                         
-                        Text(popup.title)
-                            .foregroundStyle(.primary)
-                            .fontWeight(.medium)
+                        let markdownMessage = try! AttributedString(markdown: message)
                         
-                        if let message = popup.message {
-                            Text(message)
-                                .foregroundStyle(.secondary)
-                                .font(.caption)
-                        } // END popup showing check
-                    } // END group
-                    .frame(maxWidth: 180)
+                        Text(markdownMessage)
+                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                            
+                    } // END popup showing check
+                    
                 } // END loading check
             } // END vstack
-            .multilineTextAlignment(.center)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 20)
             .padding(.top, 13)
-            .padding(.bottom, 14)
+            .padding(.bottom, 15)
             .background(
                 ZStack {
                     RoundedRectangle(cornerRadius: rounding)
                         .fill(.ultraThinMaterial)
                 }
             )
-            .padding(.top, 22)
+            .padding(.top, topOffset)
             .transition(.opacity)
+            .frame(minWidth: minWidth, maxWidth: maxWidth)
         } // END popup showing check
     }
 }

@@ -8,6 +8,11 @@
 import Foundation
 import SwiftUI
 
+public protocol Popupable {
+    func showPopup(title: String, message: String?) async
+}
+
+
 @MainActor
 public struct PopupMessage {
     public var isLoading: Bool = false
@@ -22,15 +27,15 @@ public struct PopupMessage {
 }
 
 @MainActor
-public class PopupHandler: ObservableObject {
+public class PopupHandler: ObservableObject, Popupable {
     
-    @Published var message: PopupMessage? = nil
+    @Published var popupMessage: PopupMessage? = nil
     
     public init(
         message: PopupMessage? = nil,
         popupTask: Task<Void, Never>? = nil
     ) {
-        self.message = message
+        self.popupMessage = message
         self.popupTask = popupTask
     }
     
@@ -67,7 +72,7 @@ public class PopupHandler: ObservableObject {
     private func displayPopup(popupMessage: PopupMessage) async {
         await MainActor.run {
             withAnimation(.easeOut(duration: 0.1)) {
-                self.message = popupMessage
+                self.popupMessage = popupMessage
             }
         }
     }
@@ -75,7 +80,7 @@ public class PopupHandler: ObservableObject {
     private func hidePopup() async {
         await MainActor.run {
             withAnimation(.easeInOut(duration: 0.6)) {
-                self.message = nil
+                self.popupMessage = nil
             }
         }
     }
