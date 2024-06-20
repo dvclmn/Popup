@@ -12,7 +12,6 @@
 //
 
 import SwiftUI
-import Styles
 
 public struct PopupView: View {
     
@@ -20,33 +19,38 @@ public struct PopupView: View {
     
     let rounding: Double
     let topOffset: Double
+    let isCompact: Bool
     
     let maxWidth: Double = 240
     let minWidth: Double = 180
     
-    
     public init(
-        rounding: Double = Styles.roundingMedium,
+        rounding: Double = 10,
         topOffset: Double = 22,
+        isCompact: Bool = false,
         popup: PopupHandler
     ) {
         self.rounding = rounding
         self.topOffset = topOffset
+        self.isCompact = isCompact
         self.popup = popup
     }
     
     public var body: some View {
         
+//        var compactFactor
+        
         if let popup = popup.popupMessage {
             
-            VStack(spacing: 6) {
+            VStack(spacing: isCompact ? 4 : 6) {
                 if popup.isLoading {
                     PopupLoadingIndicatorView()
                 } else {
                     let markdownTitle = try! AttributedString(markdown: popup.title)
                     
                     Text(markdownTitle)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.primary.opacity( isCompact ? 0.8 : 1.0))
+                        .font(.system(size: isCompact ? 11 : 14))
                         .fontWeight(.medium)
                     
                     if let message = popup.message {
@@ -63,28 +67,41 @@ public struct PopupView: View {
             } // END vstack
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 20)
-            .padding(.top, 13)
-            .padding(.bottom, 15)
+            .padding(.horizontal, isCompact ? 12 : 20)
+            .padding(.top, isCompact ? 8 : 13)
+            .padding(.bottom, isCompact ? 10 : 15)
             .background(
                 ZStack {
                     RoundedRectangle(cornerRadius: rounding)
                         .fill(.ultraThinMaterial)
                 }
             )
+//            .padding(10)
             .padding(.top, topOffset)
             .transition(.opacity)
-            .frame(minWidth: minWidth, maxWidth: maxWidth)
+//            .frame(minWidth: minWidth, maxWidth: maxWidth)
+            
         } // END popup showing check
     }
 }
 
-//#Preview("Popup message") {
-//
-//    PopupMessageView(rounding: 10, loadingView: )
-//#if os(macOS)
-//        .frame(width: 500, height: 400)
-//        .background(Swatch.darkGrey.colour)
-//#endif
-//
-//}
+#Preview("Popup message") {
+
+    RoundedRectangle(cornerRadius: 12)
+        .fill(.red.opacity(0.2))
+        .overlay(alignment: .topTrailing) {
+            PopupView(
+                isCompact: true,
+                popup: PopupHandler(message: PopupMessage(
+                    title: "Hello, it's a message"
+//                    message: "As well as some more text."
+                ))
+            )
+        }
+        .padding()
+#if os(macOS)
+        .frame(width: 500, height: 400)
+        .background(.black.opacity(0.4))
+#endif
+
+}
