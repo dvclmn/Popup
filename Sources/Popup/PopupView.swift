@@ -17,7 +17,7 @@ public struct PopupView: View {
     
     @ObservedObject var popup: PopupHandler
     
-    let location: PopupLocation
+    let locationID: String
     let rounding: Double
     let topOffset: Double
     let isCompact: Bool
@@ -26,13 +26,13 @@ public struct PopupView: View {
     let minWidth: Double = 180
     
     public init(
-        location: PopupLocation = PopupLocation("main"),
+        locationID: String = "main",
         rounding: Double = 10,
         topOffset: Double = 22,
         isCompact: Bool = false,
         popup: PopupHandler
     ) {
-        self.location = location
+        self.locationID = locationID
         self.rounding = rounding
         self.topOffset = topOffset
         self.isCompact = isCompact
@@ -42,7 +42,7 @@ public struct PopupView: View {
     public var body: some View {
         
         
-        if let message = popup.popupMessage, self.location == message.location {
+        if let message = popup.popupMessage, self.locationID == message.locationID {
             
             
             Popup(message)
