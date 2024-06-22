@@ -9,21 +9,23 @@ import Foundation
 import SwiftUI
 
 public protocol Popupable {
-    func showPopup(title: String, message: String?) async
+    func showPopup(title: String, message: String?, location: PopupLocation) async
 }
 
+public struct PopupLocation: Equatable {
+    public var id: String
+    
+    public init(_ id: String) {
+        self.id = id
+    }
+}
 
 @MainActor
 public struct PopupMessage {
     public var isLoading: Bool = false
     public var title: String
-    public var message: String?
-    
-    public init(isLoading: Bool = false, title: String, message: String? = nil) {
-        self.isLoading = isLoading
-        self.title = title
-        self.message = message
-    }
+    public var message: String? = nil
+    public var location: PopupLocation = PopupLocation("main")
 }
 
 @MainActor
@@ -41,8 +43,17 @@ public class PopupHandler: ObservableObject, Popupable {
     
     private var popupTask: Task<Void, Never>? = nil
     
-    public func showPopup(title: String, message: String? = nil) {
-        let popupMessage = PopupMessage(isLoading: false, title: title, message: message)
+    public func showPopup(
+        title: String,
+        message: String? = nil,
+        location: PopupLocation = PopupLocation("main")
+    ) {
+        let popupMessage = PopupMessage(
+            isLoading: false,
+            title: title,
+            message: message,
+            location: location
+        )
         Task {
             await showAndHidePopup(popupMessage: popupMessage)
         }
