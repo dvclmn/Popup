@@ -7,13 +7,27 @@
 
 import Foundation
 import SwiftUI
+import Dependencies
 
-public protocol Popupable {
+
+public extension DependencyValues {
+    var popup: PopupHandler {
+        get { self[PopupHandler.self] }
+        set { self[PopupHandler.self] = newValue }
+    }
+}
+extension PopupHandler: DependencyKey {
+    public static let liveValue = PopupHandler()
+}
+
+
+public protocol Popupable: Sendable {
     func showPopup(title: String, message: String?, locationID: String) async
 }
 
 @MainActor
 public struct PopupMessage {
+    
     public var isLoading: Bool = false
     public var title: String
     public var message: String? = nil
@@ -21,9 +35,10 @@ public struct PopupMessage {
 }
 
 @MainActor
-public class PopupHandler: ObservableObject, Popupable {
+@Observable
+public class PopupHandler: Popupable {
     
-    @Published var popupMessage: PopupMessage? = nil
+    var popupMessage: PopupMessage? = nil
     
     public init(
         message: PopupMessage? = nil,
@@ -55,20 +70,18 @@ public class PopupHandler: ObservableObject, Popupable {
         popupTask?.cancel()
         print("Popup triggered: \(popupMessage.title)")
         
-        popupTask = Task { [weak self] in
-            await self?.displayPopup(popupMessage: popupMessage)
+        popupTask = Task {
+            await displayPopup(popupMessage: popupMessage)
             
             do {
-                if #available(iOS 16.0, *) {
-                    try await Task.sleep(for: .seconds(2.5))
-                } else {
-                    // Fallback on earlier versions
-                }
+                try await Task.sleep(for: .seconds(3.5))
+                
             } catch {
+                print("Couldn't sleep task for popup: \(error)")
                 return
             }
             
-            await self?.hidePopup()
+            await hidePopup()
         }
     } // END show hide popup
     

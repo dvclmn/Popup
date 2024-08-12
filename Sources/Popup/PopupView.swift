@@ -12,10 +12,12 @@
 //
 
 import SwiftUI
+import Dependencies
 
+@MainActor
 public struct PopupView: View {
     
-    @ObservedObject var popup: PopupHandler
+    @Dependency(\.popup) private var popup
     
     let locationID: String
     let rounding: Double
@@ -29,26 +31,23 @@ public struct PopupView: View {
         locationID: String = "main",
         rounding: Double = 10,
         topOffset: Double = 22,
-        isCompact: Bool = false,
-        popup: PopupHandler
+        isCompact: Bool = false
+//        popup: PopupHandler
     ) {
         self.locationID = locationID
         self.rounding = rounding
         self.topOffset = topOffset
         self.isCompact = isCompact
-        self.popup = popup
+//        self.popup = popup
     }
     
     public var body: some View {
         
-        
         if let message = popup.popupMessage, self.locationID == message.locationID {
-            
             
             Popup(message)
             
         }
-        
     }
 }
 
@@ -59,18 +58,15 @@ extension PopupView {
             if message.isLoading {
                 PopupLoadingIndicatorView()
             } else {
-                let markdownTitle = try! AttributedString(markdown: message.title)
                 
-                Text(markdownTitle)
+                Text(message.title)
                     .foregroundStyle(.primary.opacity( isCompact ? 0.8 : 1.0))
                     .font(.system(size: isCompact ? 11 : 14))
                     .fontWeight(.medium)
                 
                 if let message = message.message {
                     
-                    let markdownMessage = try! AttributedString(markdown: message)
-                    
-                    Text(markdownMessage)
+                    Text(message)
                         .foregroundStyle(.secondary)
                         .font(.caption)
                     
@@ -89,29 +85,44 @@ extension PopupView {
                     .fill(.ultraThinMaterial)
             }
         )
-        //            .padding(10)
         .padding(.top, topOffset)
         .transition(.opacity)
-        //            .frame(minWidth: minWidth, maxWidth: maxWidth)
     }
 }
 
+@MainActor
+struct PopupTestView: View {
+    
+    @State private var popup = PopupHandler()
+        
+    var body: some View {
+        
+        Button {
+//            popup.showPopup(title: "It's a test")
+            
+        } label: {
+            Text("Test popup")
+        }
+        
+        RoundedRectangle(cornerRadius: 12)
+            .fill(.red.opacity(0.05))
+            .overlay(alignment: .top) {
+                PopupView(
+//                    popup: popup
+                )
+//                PopupView(
+//                    popup: popup
+//                )
+            }
+            .padding()
+            .frame(width: 500, height: 400)
+            .background(.black.opacity(0.4))
+        
+    }
+}
+
+
 #Preview("Popup message") {
     
-    RoundedRectangle(cornerRadius: 12)
-        .fill(.red.opacity(0.2))
-        .overlay(alignment: .topTrailing) {
-            PopupView(
-                isCompact: true,
-                popup: PopupHandler(message: PopupMessage(
-                    title: "Hello, it's a message")
-                )
-            )
-        }
-        .padding()
-#if os(macOS)
-        .frame(width: 500, height: 400)
-        .background(.black.opacity(0.4))
-#endif
-    
+    PopupTestView()
 }
